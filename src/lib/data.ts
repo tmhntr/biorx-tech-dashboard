@@ -89,7 +89,7 @@ export const processRows = (rows: SheetRow[]): DataRow[] => {
 export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
   const dbName = "DispensingDB";
   const storeName = "DataRows";
-  const dbVersion = 1;
+  // const dbVersion = 1;
   
   // const clearDatabase = () => {
   //   return new Promise<void>((resolve, reject) => {
