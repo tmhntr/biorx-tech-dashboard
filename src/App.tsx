@@ -18,7 +18,7 @@ import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 
 type Window = "1 month" | "3 months" | "6 months";
-export const window_length: Window = "6 months";
+export const window_length: Window = "3 months";
 
 export default function DashboardPage() {
   const [data, setData] = React.useState<DataRow[]>([]);
