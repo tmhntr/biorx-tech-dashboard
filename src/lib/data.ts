@@ -90,31 +90,31 @@ export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
   const dbName = "DispensingDB";
   const storeName = "DataRows";
   const dbVersion = 1;
-  const clearDatabase = () => {
-    return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open(dbName, dbVersion);
+  // const clearDatabase = () => {
+  //   return new Promise<void>((resolve, reject) => {
+  //     const request = indexedDB.open(dbName, dbVersion);
 
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(storeName, "readwrite");
-        const store = transaction.objectStore(storeName);
+  //     request.onsuccess = (event) => {
+  //       const db = (event.target as IDBOpenDBRequest).result;
+  //       const transaction = db.transaction(storeName, "readwrite");
+  //       const store = transaction.objectStore(storeName);
 
-        const clearRequest = store.clear();
+  //       const clearRequest = store.clear();
 
-        clearRequest.onsuccess = () => {
-          resolve();
-        };
+  //       clearRequest.onsuccess = () => {
+  //         resolve();
+  //       };
 
-        clearRequest.onerror = (event) => {
-          reject((event.target as IDBRequest).error);
-        };
-      };
+  //       clearRequest.onerror = (event) => {
+  //         reject((event.target as IDBRequest).error);
+  //       };
+  //     };
 
-      request.onerror = (event) => {
-        reject((event.target as IDBRequest).error);
-      };
-    });
-  };
+  //     request.onerror = (event) => {
+  //       reject((event.target as IDBRequest).error);
+  //     };
+  //   });
+  // };
 
 //   await clearDatabase();
 

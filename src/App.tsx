@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -28,7 +27,7 @@ import {
   DataRow,
 } from "@/lib/data";
 import { CalendarPopover } from "./components/calendar-popover";
-import { addDays, addMonths } from "date-fns";
+import { addMonths } from "date-fns";
 import { Badge } from "./components/ui/badge";
 
 type Product = {
@@ -208,6 +207,7 @@ export default function DashboardPage() {
                       <h3 className="text-md font-medium">Container type</h3>
                       <ToggleGroup
                         type="single"
+                        // @ts-ignore
                         onValueChange={(e) => setSelectedContainer(e)}
                       >
                         {(
