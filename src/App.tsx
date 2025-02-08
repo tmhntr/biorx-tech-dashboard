@@ -157,6 +157,7 @@ export default function DashboardPage() {
                     const processedData = processRows(data);
                     console.log(processedData);
                     await saveDataRowsToIndexedDB(processedData);
+                    console.log("Data saved to indexedDB");
                     setData(await queryDataRowsFromIndexedDB({}));
                   }
                 }}

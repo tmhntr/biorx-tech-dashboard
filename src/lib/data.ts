@@ -89,38 +89,10 @@ export const processRows = (rows: SheetRow[]): DataRow[] => {
 export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
   const dbName = "DispensingDB";
   const storeName = "DataRows";
-  // const dbVersion = 1;
-  
-  // const clearDatabase = () => {
-  //   return new Promise<void>((resolve, reject) => {
-  //     const request = indexedDB.open(dbName, dbVersion);
-
-  //     request.onsuccess = (event) => {
-  //       const db = (event.target as IDBOpenDBRequest).result;
-  //       const transaction = db.transaction(storeName, "readwrite");
-  //       const store = transaction.objectStore(storeName);
-
-  //       const clearRequest = store.clear();
-
-  //       clearRequest.onsuccess = () => {
-  //         resolve();
-  //       };
-
-  //       clearRequest.onerror = (event) => {
-  //         reject((event.target as IDBRequest).error);
-  //       };
-  //     };
-
-  //     request.onerror = (event) => {
-  //       reject((event.target as IDBRequest).error);
-  //     };
-  //   });
-  // };
-
-//   await clearDatabase();
+  const dbVersion = 1;
 
   return new Promise<void>((resolve, reject) => {
-    const request = indexedDB.open(dbName);
+    const request = indexedDB.open(dbName, dbVersion);
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
@@ -165,11 +137,21 @@ export const queryDataRowsFromIndexedDB = async (filters: {
   return new Promise<DataRow[]>((resolve, reject) => {
     const request = indexedDB.open(dbName, dbVersion);
 
-    request.onsuccess = (event) => {
+    request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(storeName)) {
         db.createObjectStore(storeName, { keyPath: "filled_datetime" });
       }
+    };
+
+    request.onsuccess = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+
+      if (!db.objectStoreNames.contains(storeName)) {
+        resolve([]);
+        return;
+      }
+
       const transaction = db.transaction(storeName, "readonly");
       const store = transaction.objectStore(storeName);
       const dataRows: DataRow[] = [];
@@ -220,3 +202,64 @@ export const queryDataRowsFromIndexedDB = async (filters: {
     };
   });
 };
+
+// export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
+//   const dbName = "DispensingDB";
+//   const storeName = "DataRows";
+//   const dbVersion = 1;
+
+//   return new Promise<DataRow[]>((resolve, reject) => {
+//     const request = indexedDB.open(dbName, dbVersion);
+
+//     request.onsuccess = (event) => {
+//       const db = (event.target as IDBOpenDBRequest).result;
+//       const transaction = db.transaction(storeName, "readonly");
+//       const store = transaction.objectStore(storeName);
+//       const dataRows: DataRow[] = [];
+
+//       const cursorRequest = store.openCursor();
+
+//       cursorRequest.onsuccess = (event) => {
+//         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+//         if (cursor) {
+//           const dataRow = cursor.value as DataRow;
+//           let matches = true;
+
+//           if (filters.filled_datetime) {
+//             const { start, end } = filters.filled_datetime;
+//             if (
+//               dataRow.filled_datetime < start ||
+//               dataRow.filled_datetime > end
+//             ) {
+//               matches = false;
+//             }
+//           }
+
+//           if (filters.container && dataRow.container !== filters.container) {
+//             matches = false;
+//           }
+
+//           if (filters.product && dataRow.product_name !== filters.product) {
+//             matches = false;
+//           }
+
+//           if (matches) {
+//             dataRows.push(dataRow);
+//           }
+
+//           cursor.continue();
+//         } else {
+//           resolve(dataRows);
+//         }
+//       };
+
+//       cursorRequest.onerror = (event) => {
+//         reject((event.target as IDBRequest).error);
+//       };
+//     };
+
+//     request.onerror = (event) => {
+//       reject((event.target as IDBRequest).error);
+//     };
+//   });
+// };
