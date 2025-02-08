@@ -167,6 +167,9 @@ export const queryDataRowsFromIndexedDB = async (filters: {
 
     request.onsuccess = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName, { keyPath: "filled_datetime" });
+      }
       const transaction = db.transaction(storeName, "readonly");
       const store = transaction.objectStore(storeName);
       const dataRows: DataRow[] = [];
