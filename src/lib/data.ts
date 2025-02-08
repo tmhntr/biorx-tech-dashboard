@@ -1,3 +1,5 @@
+import { read, utils } from "xlsx";
+
 export type Container = "vial" | "1cc" | "3cc" | "5cc" | "10cc";
 export type SheetRow = {
   product_name: string;
@@ -23,9 +25,29 @@ export type DataRow = {
   notes: string;
   filled_datetime: string;
   dispense_time: number | null;
-  activity_error: number;
+  activity_error: number | null;
   container: Container;
   QS: boolean;
+};
+
+const loadExcelFile = async (file: File): Promise<DataRow[]> => {
+  var ab = await file.arrayBuffer();
+
+  const wb = read(ab, { cellDates: true, UTC: true });
+  const ws = wb.Sheets[wb.SheetNames[0]]; // get the first worksheet
+  const data = utils.sheet_to_json(ws, {
+    UTC: true,
+  }) as SheetRow[];
+
+  return processRows(data.map(processRow));
+};
+
+const getContainer = (final_volume: number, procedure: string): Container => {
+  if (procedure.includes("vial")) return "vial";
+  else if (final_volume < 0.39) return "1cc";
+  else if (final_volume < 1.49) return "3cc" 
+  else if (final_volume < 2.5) return "5cc";
+  else return "10cc";
 };
 
 export const processRow = (row: SheetRow): DataRow => {
@@ -37,6 +59,7 @@ export const processRow = (row: SheetRow): DataRow => {
     "T" +
     time.toISOString().slice(11, 19) +
     ".000";
+  const activity_error = ((row.actual_activity - row.activity) * 100) / row.activity;
 
   return {
     product_name: row.product_name,
@@ -49,41 +72,28 @@ export const processRow = (row: SheetRow): DataRow => {
     notes: row.notes,
     filled_datetime,
     dispense_time: null,
-    activity_error: ((row.actual_activity - row.activity) * 100) / row.activity,
-    container: "3cc",
-    QS: row.notes.includes("QS"),
+    activity_error: (activity_error >= 0 && activity_error <= 10) ? activity_error : null,
+    container: getContainer(row.final_volume, row.procedure),
+    QS: row.notes.toLowerCase().includes("qs"),
   };
 };
 
-export const processRows = (rows: SheetRow[]): DataRow[] => {
-  var temp = rows.map(processRow);
-  temp.sort((a, b) => {
+export const processRows = (_rows: DataRow[]): DataRow[] => {  
+  const rows = Array.from(_rows);
+  return rows.sort((a, b) => {
     return a.filled_datetime.localeCompare(b.filled_datetime);
-  });
-  temp = temp.map((row, i) => {
-    if (i > 0 && row.product_name === temp[i - 1].product_name) {
+  }).map((row, i) => {
+    if (i > 0 && row.product_name === rows[i - 1].product_name) {
       row.dispense_time =
         (new Date(row.filled_datetime).getTime() -
-          new Date(temp[i - 1].filled_datetime).getTime()) /
+          new Date(rows[i - 1].filled_datetime).getTime()) /
         1000;
       if (row.dispense_time < 0 || row.dispense_time > 60 * 30) {
         row.dispense_time = null;
       }
     }
-    if (row.final_volume < 0.39) {
-      row.container = "1cc";
-    } else if (row.final_volume < 1.49) {
-      row.container = "3cc";
-    } else if (row.final_volume < 2.5) {
-      row.container = "5cc";
-    } else {
-      row.container = "10cc";
-    }
-    if (row.procedure.includes("vial")) row.container = "vial";
-
     return row;
-  });
-  return temp;
+  });;
 };
 
 export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
@@ -201,6 +211,12 @@ export const queryDataRowsFromIndexedDB = async (filters: {
       reject((event.target as IDBRequest).error);
     };
   });
+};
+
+export const loadExcelFileAndSaveToIndexedDB = async (file: File) => {
+  let dataRows = await loadExcelFile(file);
+  dataRows = processRows(dataRows);
+  await saveDataRowsToIndexedDB(dataRows);
 };
 
 // export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
