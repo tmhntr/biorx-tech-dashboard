@@ -1,4 +1,4 @@
-import React, { use, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
   LineChart,
@@ -10,7 +10,6 @@ import {
   Label,
 } from "recharts";
 import { DataRow } from "@/lib/data";
-import { it } from "node:test";
 
 interface AverageDispenseTimesCardProps {
   data: DataRow[];

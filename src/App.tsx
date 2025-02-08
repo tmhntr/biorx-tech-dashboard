@@ -1,18 +1,7 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Input } from "./components/ui/input";
-import { read, utils } from "xlsx";
 import React from "react";
 import {
-  processRows,
-  SheetRow,
-  saveDataRowsToIndexedDB,
   queryDataRowsFromIndexedDB,
   Container,
   DataRow,
@@ -25,9 +14,8 @@ import DosesCard from "./components/DosesCard";
 import DispenseAccuracyCard from "./components/DispenseAccuracyCard";
 import DispenseTimeCard from "./components/DispenseTimeCard";
 import { products } from "./lib/products";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis } from "recharts";
-import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
+import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 
 export default function DashboardPage() {
   const [data, setData] = React.useState<DataRow[]>([]);
@@ -189,7 +177,7 @@ export default function DashboardPage() {
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <AverageDispenseTimesCard data={data} />
-                <DispenseTimesHistogram className="col-span-3" data={data} />
+                <DispenseTimesHistogram data={data} />
               </div>
             </TabsContent>
           </Tabs>
