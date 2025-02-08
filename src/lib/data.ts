@@ -24,6 +24,7 @@ export type DataRow = {
   final_volume: number;
   notes: string;
   filled_datetime: string;
+  filled_date: string;
   dispense_time: number | null;
   activity_error: number | null;
   container: Container;
@@ -71,6 +72,7 @@ export const processRow = (row: SheetRow): DataRow => {
     final_volume: row.final_volume,
     notes: row.notes,
     filled_datetime,
+    filled_date: row.filled_date.toISOString().slice(0, 10),
     dispense_time: null,
     activity_error: (activity_error >= 0 && activity_error <= 10) ? activity_error : null,
     container: getContainer(row.final_volume, row.procedure),

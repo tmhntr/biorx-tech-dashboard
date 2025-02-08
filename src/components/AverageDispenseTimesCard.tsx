@@ -10,6 +10,7 @@ import {
   Label,
 } from "recharts";
 import { DataRow } from "@/lib/data";
+import { window_length } from "@/App";
 
 interface AverageDispenseTimesCardProps {
   data: DataRow[];
@@ -25,20 +26,49 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
     }[]
   >([]);
   useEffect(() => {
-    const averageByDay = Object.groupBy(data, (it) =>
-      new Date(it.filled_datetime).toISOString().slice(5, 10)
+    const filteredData = data.filter((row) => row.dispense_time);
+    const averageByDay = Object.groupBy(filteredData, (it) =>
+      it.filled_date
     );
-    const averages = Object.keys(averageByDay).map((key) => {
-      const dayData = averageByDay[key];
-      const sum = dayData?.reduce(
-        (acc, it) => acc + (it.dispense_time || 0),
-        0
-      );
+    // create an array of each calendar date for the last 6 months
+
+    let window_days
+    switch (window_length) {
+        case "1 month":
+            window_days = 30
+            break;
+        case "3 months":
+            window_days = 90
+            break;
+        case "6 months":
+            window_days = 182
+            break;
+    
+        default:
+            window_days = 30
+            break;
+    }
+    const lastDate = Object.keys(averageByDay).sort().reverse()[0] || new Date().toISOString().slice(0, 10);
+    const dateArray = Array.from({ length: window_days }, (_, i) => {
+      const date = new Date(lastDate);
+      date.setDate(date.getDate() - i);
+      return date;
+    }).reverse();
+    // calculate the average dispense time for each date
+    const averages = dateArray.map((date) => {
+      const dateString = date.toISOString().slice(0, 10);
+      const dispenseTimes = averageByDay[dateString];
+      if (!dispenseTimes || dispenseTimes.length === 0) {
+        return { date: dateString.slice(5,10), avg_dispense_time: null };
+      }
+      const total = dispenseTimes.reduce((acc, it) => acc + it.dispense_time!, 0);
+      const avg = dispenseTimes.length === 0 ? null : total / dispenseTimes.length;
       return {
-        date: key,
-        avg_dispense_time: sum && dayData ? sum / dayData.length : null,
+        date: dateString.slice(5,10),
+        avg_dispense_time: avg,
       };
     });
+
     setAverageDispenseTimes(averages);
   }, [data]);
 

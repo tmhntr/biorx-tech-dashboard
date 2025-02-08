@@ -17,6 +17,9 @@ import { products } from "./lib/products";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 
+type Window = "1 month" | "3 months" | "6 months";
+export const window_length: Window = "6 months";
+
 export default function DashboardPage() {
   const [data, setData] = React.useState<DataRow[]>([]);
   const [date, setDate] = React.useState<Date | undefined>(
@@ -37,7 +40,7 @@ export default function DashboardPage() {
           container: selectedContainer,
           filled_datetime: date && {
             end: date?.toISOString(),
-            start: addMonths(date, -1).toISOString(),
+            start: addMonths(date, -6).toISOString(),
           },
         })
       );
