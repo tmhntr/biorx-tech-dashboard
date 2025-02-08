@@ -90,6 +90,7 @@ export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
   const dbName = "DispensingDB";
   const storeName = "DataRows";
   const dbVersion = 1;
+  
   // const clearDatabase = () => {
   //   return new Promise<void>((resolve, reject) => {
   //     const request = indexedDB.open(dbName, dbVersion);
@@ -119,7 +120,7 @@ export const saveDataRowsToIndexedDB = async (dataRows: DataRow[]) => {
 //   await clearDatabase();
 
   return new Promise<void>((resolve, reject) => {
-    const request = indexedDB.open(dbName, dbVersion);
+    const request = indexedDB.open(dbName);
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
