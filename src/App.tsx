@@ -1,12 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Input } from "./components/ui/input";
 import React from "react";
-import {
-  queryDataRowsFromIndexedDB,
-  Container,
-  DataRow,
-  loadExcelFileAndSaveToIndexedDB,
-} from "@/lib/data";
 import { addMonths } from "date-fns";
 import { CalendarDatePicker } from "./components/calendar-date-picker";
 import ControlsCard from "./components/ControlsCard";
@@ -16,52 +10,52 @@ import DispenseTimeCard from "./components/DispenseTimeCard";
 import { products } from "./lib/products";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
+import transformData, { Container, DataRow } from "./lib/data/transform";
+import {
+  DataFilters,
+  initDB,
+  queryDataRowsFromIndexedDB,
+  saveDataRowsToIndexedDB,
+} from "./lib/db";
+import extractData from "./lib/data/extract";
+import { formatDate } from "./lib/utils";
+import { Card } from "./components/ui/card";
+import FilterComponent from "./components/FilterComponent";
 
 type Window = "1 month" | "3 months" | "6 months";
 export const window_length: Window = "3 months";
 
 export default function DashboardPage() {
+  const [isDBReady, setIsDBReady] = React.useState<boolean>(false);
+  const [filter, setFilter] = React.useState<DataFilters>({});
+  const [date, setDate] = React.useState<Date>(new Date());
+
+  const handleInitDB = async () => {
+    if (isDBReady) return;
+    const status = await initDB();
+    setIsDBReady(status);
+  };
+  handleInitDB();
   const [data, setData] = React.useState<DataRow[]>([]);
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date(Date.now())
-  );
-  const [selectedProduct, setSelectedProduct] = React.useState<
-    string | undefined
-  >(undefined);
-  const [selectedContainer, setSelectedContainer] = React.useState<
-    Container | undefined
-  >(undefined);
+
+  const refreshData = async () => {
+    setData(await queryDataRowsFromIndexedDB(filter));
+  };
   React.useEffect(() => {
     // console log all unique product_name
-    (async () => {
-      setData(
-        await queryDataRowsFromIndexedDB({
-          product: selectedProduct,
-          container: selectedContainer,
-          filled_datetime: date && {
-            end: date?.toISOString(),
-            start: addMonths(date, -6).toISOString(),
-          },
-        })
-      );
-      // console.log(data);
-    })();
-  }, [selectedProduct, selectedContainer, data, date]);
+    if (!isDBReady) return;
+    refreshData();
+  }, [filter, isDBReady]);
+
   const totalDosesOnDate = data.filter(
-    (row) =>
-      new Date(row.filled_datetime).toDateString() === date?.toDateString()
+    (row) => row.filled_date === formatDate(date)
   ).length;
   const averageDosesPerDay =
-    data.length /
-    new Set(data.map((row) => new Date(row.filled_datetime).toDateString()))
-      .size;
+    data.length / new Set(data.map((row) => row.filled_date)).size;
 
   const avgDispenseTimeOnDate =
     data
-      .filter(
-        (row) =>
-          new Date(row.filled_datetime).toDateString() === date?.toDateString()
-      )
+      .filter((row) => row.filled_date === formatDate(date))
       .reduce((acc, row) => {
         if (row.dispense_time) {
           return acc + row.dispense_time;
@@ -80,10 +74,7 @@ export default function DashboardPage() {
 
   const avgDispenseAccuracyOnDate =
     data
-      .filter(
-        (row) =>
-          new Date(row.filled_datetime).toDateString() === date?.toDateString()
-      )
+      .filter((row) => row.filled_date === formatDate(date))
       .reduce((acc, row) => {
         return acc + (row.activity_error || 0);
       }, 0) / totalDosesOnDate;
@@ -126,14 +117,28 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
             <div className="flex items-center space-x-2">
               <CalendarDatePicker
-                date={{ from: date, to: date }}
-                onDateSelect={({ from }) => {
-                  setDate(from);
+                date={{
+                  from: filter.filled_datetime?.start
+                    ? new Date(filter.filled_datetime.start)
+                    : undefined,
+                  to: filter.filled_datetime?.end
+                    ? new Date(filter.filled_datetime.end)
+                    : undefined,
+                }}
+                onDateSelect={({ from, to }) => {
+                  setFilter((f) => ({
+                    ...f,
+                    filled_datetime: {
+                      start: formatDate(from),
+                      end: formatDate(to),
+                    },
+                  }));
                 }}
                 variant="outline"
-                numberOfMonths={1}
+                numberOfMonths={2}
                 className="min-w-[250px]"
               />
+              
               <Input
                 id="file"
                 type="file"
@@ -141,8 +146,9 @@ export default function DashboardPage() {
                   console.log(e.target.files);
                   if (e.target.files) {
                     const file = e.target.files[0];
-                    await loadExcelFileAndSaveToIndexedDB(file);
-                    setData(await queryDataRowsFromIndexedDB({}));
+                    const data = transformData(await extractData(file));
+                    saveDataRowsToIndexedDB(data);
+                    refreshData();
                   }
                 }}
               />
@@ -160,11 +166,9 @@ export default function DashboardPage() {
             </TabsList>
             <TabsContent value="dispensing" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <ControlsCard
-                  products={products}
-                  setSelectedProduct={setSelectedProduct}
-                  setSelectedContainer={setSelectedContainer}
-                />
+                <Card>
+                <FilterComponent setFilter={setFilter} filter={filter} />
+                </Card>
                 <DosesCard
                   totalDosesOnDate={totalDosesOnDate}
                   averageDosesPerDay={averageDosesPerDay}

@@ -9,8 +9,8 @@ import {
   Tooltip,
   Label,
 } from "recharts";
-import { DataRow } from "@/lib/data";
 import { window_length } from "@/App";
+import { DataRow } from "@/lib/data/transform";
 
 interface AverageDispenseTimesCardProps {
   data: DataRow[];
@@ -26,31 +26,22 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
     }[]
   >([]);
   useEffect(() => {
-    const filteredData = data.filter((row) => row.dispense_time);
-    const averageByDay = Object.groupBy(filteredData, (it) =>
-      it.filled_date
-    );
-    // create an array of each calendar date for the last 6 months
-
-    let window_days
-    switch (window_length) {
-        case "1 month":
-            window_days = 30
-            break;
-        case "3 months":
-            window_days = 90
-            break;
-        case "6 months":
-            window_days = 182
-            break;
-    
-        default:
-            window_days = 30
-            break;
+    if (data.length === 0) {
+      return;
     }
-    const lastDate = Object.keys(averageByDay).sort().reverse()[0] || new Date().toISOString().slice(0, 10);
+    const filteredData = data
+      .filter((row) => row.dispense_time)
+      .sort((a, b) => a.filled_datetime.localeCompare(b.filled_datetime));
+    const averageByDay = Object.groupBy(filteredData, (it) => it.filled_date);
+
+    // get the number of days between the last date and the first date
+    const startDate = new Date(filteredData[0].filled_date);
+    const endDate = new Date(filteredData[filteredData.length - 1].filled_date);
+    const window_days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // const lastDate = Object.keys(averageByDay).sort().reverse()[0] || new Date().toISOString().slice(0, 10);
     const dateArray = Array.from({ length: window_days }, (_, i) => {
-      const date = new Date(lastDate);
+      const date = new Date(endDate);
       date.setDate(date.getDate() - i);
       return date;
     }).reverse();
@@ -59,12 +50,16 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
       const dateString = date.toISOString().slice(0, 10);
       const dispenseTimes = averageByDay[dateString];
       if (!dispenseTimes || dispenseTimes.length === 0) {
-        return { date: dateString.slice(5,10), avg_dispense_time: null };
+        return { date: dateString.slice(5, 10), avg_dispense_time: null };
       }
-      const total = dispenseTimes.reduce((acc, it) => acc + it.dispense_time!, 0);
-      const avg = dispenseTimes.length === 0 ? null : total / dispenseTimes.length;
+      const total = dispenseTimes.reduce(
+        (acc, it) => acc + it.dispense_time!,
+        0
+      );
+      const avg =
+        dispenseTimes.length === 0 ? null : total / dispenseTimes.length;
       return {
-        date: dateString.slice(5,10),
+        date: dateString.slice(5, 10),
         avg_dispense_time: avg,
       };
     });

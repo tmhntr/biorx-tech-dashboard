@@ -26,3 +26,7 @@ export const products: Product[] = [
   // { name: 'WBC Case In-111', shortName: "wbc-in", color: "bg-blue-500" },
   // { name: 'WBC Case Tc-99m', shortName: "wbc-case", color: "bg-blue-500" },
 ];
+
+export const getProduct = (name: string) => {
+  return products.find(p => p.name === name)
+}

@@ -15,7 +15,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 import { Badge } from "../components/ui/badge";
 import { Product } from "@/types";
-import { Container } from "@/lib/data";
+import { Container } from "@/lib/data/transform";
 
 type ControlsCardProps = {
   products: Product[];
