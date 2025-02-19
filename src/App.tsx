@@ -1,16 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Input } from "./components/ui/input";
 import React from "react";
-import { addMonths } from "date-fns";
 import { CalendarDatePicker } from "./components/calendar-date-picker";
-import ControlsCard from "./components/ControlsCard";
 import DosesCard from "./components/DosesCard";
 import DispenseAccuracyCard from "./components/DispenseAccuracyCard";
 import DispenseTimeCard from "./components/DispenseTimeCard";
-import { products } from "./lib/products";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
-import transformData, { Container, DataRow } from "./lib/data/transform";
+import transformData, { DataRow } from "./lib/data/transform";
 import {
   DataFilters,
   initDB,
@@ -28,7 +25,7 @@ export const window_length: Window = "3 months";
 export default function DashboardPage() {
   const [isDBReady, setIsDBReady] = React.useState<boolean>(false);
   const [filter, setFilter] = React.useState<DataFilters>({});
-  const [date, setDate] = React.useState<Date>(new Date());
+  const [date, _] = React.useState(new Date());
 
   const handleInitDB = async () => {
     if (isDBReady) return;

@@ -1,15 +1,11 @@
 import React from "react";
 import { DataFilters } from "../lib/db";
-import { Input } from "./ui/input";
 import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 import { Container, CONTAINERS } from "@/lib/data/transform";
-import { Product } from "@/types";
 import { getProduct, products } from "@/lib/products";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { set } from "date-fns";
 import { Checkbox } from "./ui/checkbox";
-import { SelectLabel } from "./ui/select";
 
 type FilterComponentProps = {
   setFilter: React.Dispatch<React.SetStateAction<DataFilters>>;

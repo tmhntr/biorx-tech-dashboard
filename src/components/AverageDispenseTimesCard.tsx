@@ -9,7 +9,6 @@ import {
   Tooltip,
   Label,
 } from "recharts";
-import { window_length } from "@/App";
 import { DataRow } from "@/lib/data/transform";
 
 interface AverageDispenseTimesCardProps {

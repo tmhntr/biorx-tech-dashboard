@@ -1,4 +1,3 @@
-import { Product } from "@/types";
 import { Container, DataRow } from "./data/transform";
 // db.ts
 

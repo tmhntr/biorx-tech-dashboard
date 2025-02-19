@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Label } from "recharts";
-import { DataRow } from "@/lib/data";
+import { DataRow } from "@/lib/data/transform";
 
 interface DispenseTimesHistogramProps {
   data: DataRow[];
