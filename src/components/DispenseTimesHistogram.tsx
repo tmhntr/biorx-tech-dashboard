@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Label } from "recharts";
 import { DataRow } from "@/lib/data/transform";

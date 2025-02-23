@@ -2,9 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Input } from "./components/ui/input";
 import React from "react";
 import { CalendarDatePicker } from "./components/calendar-date-picker";
-import DosesCard from "./components/DosesCard";
 import DispenseAccuracyCard from "./components/DispenseAccuracyCard";
-import DispenseTimeCard from "./components/DispenseTimeCard";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 import transformData, { DataRow } from "./lib/data/transform";
@@ -17,7 +15,6 @@ import {
 } from "./lib/db";
 import extractData from "./lib/data/extract";
 import { formatDate } from "./lib/utils";
-import { Card } from "./components/ui/card";
 import FilterComponent from "./components/FilterComponent";
 import DispenseStatsCard from "./components/DispenseStatsCard";
 import DosesByProductChart from "./components/DosesByProductChart";
