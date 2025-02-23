@@ -33,10 +33,10 @@ const DispenseAccuracyCard: React.FC<DispenseAccuracyCardProps> = ({
         </svg>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{avgDispenseAccuracyOnDate.toFixed(2)}% avg error</div>
+        <div className="text-2xl font-bold">{avgDispenseAccuracyOnDate ? avgDispenseAccuracyOnDate.toFixed(2) : 'na'}% avg error</div>
         <p className="text-xs text-muted-foreground">
-          {avgDispenseAccuracyOnDate > avgDispenseAccuracy ? '+' : ''}
-          {((avgDispenseAccuracyOnDate - avgDispenseAccuracy) * 100 / avgDispenseAccuracy).toFixed(2)}% from period average
+          {avgDispenseAccuracyOnDate ? (avgDispenseAccuracyOnDate > avgDispenseAccuracy ? '+' : '') : ''}
+          {avgDispenseAccuracyOnDate ? ((avgDispenseAccuracyOnDate - avgDispenseAccuracy) * 100 / avgDispenseAccuracy).toFixed(2) : 'na'}% from period average
         </p>
       </CardContent>
     </Card>

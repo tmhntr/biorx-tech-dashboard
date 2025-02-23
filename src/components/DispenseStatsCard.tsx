@@ -6,19 +6,23 @@ import {
   CardTitle,
 } from "../components/ui/card";
 
-type DispenseTimeCardProps = {
+type DispenseStatsCardProps = {
+  totalDosesOnDate: number;
+  averageDosesPerDay: number;
   avgDispenseTimeOnDate: number | null;
   avgDispenseTime: number;
 };
 
-const DispenseTimeCard: React.FC<DispenseTimeCardProps> = ({
+const DispenseStatsCard: React.FC<DispenseStatsCardProps> = ({
+  totalDosesOnDate,
+  averageDosesPerDay,
   avgDispenseTimeOnDate,
   avgDispenseTime,
 }) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Dispense Time</CardTitle>
+        <CardTitle className="text-sm font-medium">Dispense Stats</CardTitle>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -34,14 +38,22 @@ const DispenseTimeCard: React.FC<DispenseTimeCardProps> = ({
         </svg>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{avgDispenseTimeOnDate ? avgDispenseTimeOnDate.toFixed(0) : 'na'}s</div>
+        <div className="text-2xl font-bold">
+          {avgDispenseTimeOnDate ? avgDispenseTimeOnDate.toFixed(0) : 'na'}s
+        </div>
         <p className="text-xs text-muted-foreground">
           {avgDispenseTimeOnDate ? (avgDispenseTimeOnDate > avgDispenseTime ? '+' : '') : ''}
           {avgDispenseTimeOnDate ? ((avgDispenseTimeOnDate - avgDispenseTime) * 100 / avgDispenseTime).toFixed(2) : 'na'}% from period average
+        </p>
+        <div className="text-2xl font-bold mt-4">{totalDosesOnDate}</div>
+        <p className="text-xs text-muted-foreground">
+          {((totalDosesOnDate * 100) / averageDosesPerDay - 100) > 0 && '+'}
+          {((totalDosesOnDate * 100) / averageDosesPerDay - 100).toFixed(2)}%
+          daily average
         </p>
       </CardContent>
     </Card>
   );
 };
 
-export default DispenseTimeCard;
+export default DispenseStatsCard; 

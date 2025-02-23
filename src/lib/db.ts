@@ -21,7 +21,7 @@ export const initDB = (): Promise<boolean> => {
       // if the data object store doesn't exist, create it
       if (!db.objectStoreNames.contains(Stores.dispensing)) {
         console.log('Creating users store');
-        db.createObjectStore(Stores.dispensing, { keyPath: 'filled_datetime' });
+        db.createObjectStore(Stores.dispensing, { keyPath: 'RXNumber' });
       }
       // no need to resolve here
     };
@@ -114,7 +114,7 @@ export const queryDataRowsFromIndexedDB = async (filters: DataFilters): Promise<
                                 row.filled_datetime <= filters.filled_datetime.end)) &&
                         (!filters.container || filters.container.includes(row.container)) &&
                         (!filters.product || filters.product.includes(row.product_name)) &&
-                        (!filters.QS || row.QS) &&
+                        (filters.QS === undefined || filters.QS === row.QS) &&
                         (!filters.notes || filters.notes.some((note) => row.notes.includes(note)))
                     ) {
                         dataRows.push(row);

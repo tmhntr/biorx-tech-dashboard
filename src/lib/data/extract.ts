@@ -1,6 +1,7 @@
 import { read, utils } from "xlsx";
 
 export type RawDataRow = {
+    RXNumber: number;
     product_name: string;
     tech_name: string;
     filled_time: Date;

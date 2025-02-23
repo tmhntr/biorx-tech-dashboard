@@ -79,7 +79,7 @@ interface CalendarDatePickerProps
   closeOnSelect?: boolean;
   numberOfMonths?: 1 | 2;
   yearsRange?: number;
-  onDateSelect: (range: { from: Date; to: Date }) => void;
+  onDateSelect: (range: { from: Date | undefined; to: Date | undefined }) => void;
 }
 
 export const CalendarDatePicker = React.forwardRef<
@@ -119,6 +119,13 @@ export const CalendarDatePicker = React.forwardRef<
     const [highlightedPart, setHighlightedPart] = React.useState<string | null>(
       null
     );
+
+    React.useEffect(() => {
+      setMonthFrom(date.from);
+      setYearFrom(date.from?.getFullYear());
+      setMonthTo(date.to);
+      setYearTo(date.to?.getFullYear());
+    }, [date]);
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -265,34 +272,39 @@ export const CalendarDatePicker = React.forwardRef<
     );
 
     const dateRanges = [
-      { label: "Today", start: today, end: today },
-      { label: "Yesterday", start: subDays(today, 1), end: subDays(today, 1) },
+      // { label: "Today", start: today, end: today },
+      // { label: "Yesterday", start: subDays(today, 1), end: subDays(today, 1) },
       {
-        label: "This Week",
-        start: startOfWeek(today, { weekStartsOn: 1 }),
-        end: endOfWeek(today, { weekStartsOn: 1 }),
+        label: "Past Week",
+        start: subDays(today, 7),
+        end: today,
+      },
+      // {
+      //   label: "Last Week",
+      //   start: subDays(startOfWeek(today, { weekStartsOn: 1 }), 7),
+      //   end: subDays(endOfWeek(today, { weekStartsOn: 1 }), 7),
+      // },
+      // { label: "Last 7 Days", start: subDays(today, 6), end: today },
+      {
+        label: "Past Month",
+        start: subDays(today, 30),
+        end: today,
       },
       {
-        label: "Last Week",
-        start: subDays(startOfWeek(today, { weekStartsOn: 1 }), 7),
-        end: subDays(endOfWeek(today, { weekStartsOn: 1 }), 7),
+        label: "Past 3 Months",
+        start: subDays(today, 90),
+        end: today,
       },
-      { label: "Last 7 Days", start: subDays(today, 6), end: today },
+      // {
+      //   label: "Last Month",
+      //   start: startOfMonth(subDays(today, today.getDate())),
+      //   end: endOfMonth(subDays(today, today.getDate())),
+      // },
+      // { label: "This Year", start: startOfYear(today), end: endOfYear(today) },
       {
-        label: "This Month",
-        start: startOfMonth(today),
-        end: endOfMonth(today),
-      },
-      {
-        label: "Last Month",
-        start: startOfMonth(subDays(today, today.getDate())),
-        end: endOfMonth(subDays(today, today.getDate())),
-      },
-      { label: "This Year", start: startOfYear(today), end: endOfYear(today) },
-      {
-        label: "Last Year",
-        start: startOfYear(subDays(today, 365)),
-        end: endOfYear(subDays(today, 365)),
+        label: "Past Year",
+        start: subDays(today, 365),
+        end: today,
       },
     ];
 
@@ -557,6 +569,18 @@ export const CalendarDatePicker = React.forwardRef<
               <div className="flex">
                 {numberOfMonths === 2 && (
                   <div className="hidden md:flex flex-col gap-1 pr-4 text-left border-r border-foreground/10">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={
+                        "justify-start hover:bg-primary/90 hover:text-background"}
+                      onClick={() => {
+                        onDateSelect({ from: undefined, to: undefined });
+                        setSelectedRange(null);
+                      }}
+                    >
+                      Clear
+                    </Button>
                     {dateRanges.map(({ label, start, end }) => (
                       <Button
                         key={label}

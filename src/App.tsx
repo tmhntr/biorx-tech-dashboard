@@ -8,6 +8,7 @@ import DispenseTimeCard from "./components/DispenseTimeCard";
 import DispenseTimesHistogram from "./components/DispenseTimesHistogram";
 import AverageDispenseTimesCard from "./components/AverageDispenseTimesCard";
 import transformData, { DataRow } from "./lib/data/transform";
+import { Upload } from "lucide-react";
 import {
   DataFilters,
   initDB,
@@ -18,6 +19,8 @@ import extractData from "./lib/data/extract";
 import { formatDate } from "./lib/utils";
 import { Card } from "./components/ui/card";
 import FilterComponent from "./components/FilterComponent";
+import DispenseStatsCard from "./components/DispenseStatsCard";
+import DosesByProductChart from "./components/DosesByProductChart";
 
 type Window = "1 month" | "3 months" | "6 months";
 export const window_length: Window = "3 months";
@@ -25,7 +28,7 @@ export const window_length: Window = "3 months";
 export default function DashboardPage() {
   const [isDBReady, setIsDBReady] = React.useState<boolean>(false);
   const [filter, setFilter] = React.useState<DataFilters>({});
-  const [date, _] = React.useState(new Date());
+  const [date, setDate] = React.useState<Date>(new Date());
 
   const handleInitDB = async () => {
     if (isDBReady) return;
@@ -35,8 +38,21 @@ export default function DashboardPage() {
   handleInitDB();
   const [data, setData] = React.useState<DataRow[]>([]);
 
+  React.useEffect(() => {
+    // if current date is not in the data, set the date to the last filled date
+    if (data.length === 0) return;
+    if (!data.some((row) => row.filled_date === formatDate(date))) {
+      setDate(new Date(data[data.length - 1].filled_date));
+    }
+  }, [data]);
+
   const refreshData = async () => {
-    setData(await queryDataRowsFromIndexedDB(filter));
+    setData(
+      (await queryDataRowsFromIndexedDB(filter)).sort(
+        (a, b) =>
+          new Date(a.filled_date).getTime() - new Date(b.filled_date).getTime()
+      )
+    );
   };
   React.useEffect(() => {
     // console log all unique product_name
@@ -44,41 +60,29 @@ export default function DashboardPage() {
     refreshData();
   }, [filter, isDBReady]);
 
-  const totalDosesOnDate = data.filter(
-    (row) => row.filled_date === formatDate(date)
-  ).length;
-  const averageDosesPerDay =
-    data.length / new Set(data.map((row) => row.filled_date)).size;
+  const dataOnDate = React.useMemo(() => {
+    return data.filter((row) => row.filled_date === formatDate(date));
+  }, [data, date]);
 
-  const avgDispenseTimeOnDate =
-    data
-      .filter((row) => row.filled_date === formatDate(date))
-      .reduce((acc, row) => {
-        if (row.dispense_time) {
-          return acc + row.dispense_time;
-        } else {
-          return acc;
-        }
-      }, 0) / totalDosesOnDate;
-  const avgDispenseTime =
-    data.reduce((acc, row) => {
-      if (row.dispense_time) {
-        return acc + row.dispense_time;
-      } else {
-        return acc;
-      }
-    }, 0) / data.length;
-
-  const avgDispenseAccuracyOnDate =
-    data
-      .filter((row) => row.filled_date === formatDate(date))
-      .reduce((acc, row) => {
-        return acc + (row.activity_error || 0);
-      }, 0) / totalDosesOnDate;
-  const avgDispenseAccuracy =
-    data.reduce((acc, row) => {
-      return acc + (row.activity_error || 0);
-    }, 0) / data.length;
+  const stats = React.useMemo(() => {
+    return {
+      totalDosesOnDate: dataOnDate.length,
+      avgDispenseTimeOnDate:
+        dataOnDate.reduce((acc, row) => acc + (row.dispense_time || 0), 0) /
+        dataOnDate.length,
+      averageDosesPerDay:
+        data.length / new Set(data.map((row) => row.filled_date)).size,
+      avgDispenseAccuracyOnDate:
+        dataOnDate.reduce((acc, row) => acc + (row.activity_error || 0), 0) /
+        dataOnDate.length,
+      avgDispenseAccuracy:
+        data.reduce((acc, row) => acc + (row.activity_error || 0), 0) /
+        data.length,
+      avgDispenseTime:
+        data.reduce((acc, row) => acc + (row.dispense_time || 0), 0) /
+        data.length,
+    };
+  }, [dataOnDate]);
 
   return (
     <>
@@ -106,6 +110,28 @@ export default function DashboardPage() {
             <div className="ml-auto flex items-center space-x-4">
               {/* <Search /> */}
               {/* <UserNav /> */}
+              <div className="relative cursor-pointer border border-dashed border-muted-foreground rounded-md p-2 hover:bg-accent transition-colors duration-200 group ">
+                <label htmlFor="file" className="cursor-pointer">
+                  <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                  <Input
+                    id="file"
+                    type="file"
+                    className="hidden"
+                    placeholder="Upload a xls file"
+                    accept=".xls"
+                    aria-valuetext="Upload a xls file"
+                    onChange={async (e) => {
+                      console.log(e.target.files);
+                      if (e.target.files) {
+                        const file = e.target.files[0];
+                        const data = transformData(await extractData(file));
+                        saveDataRowsToIndexedDB(data);
+                        refreshData();
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -123,6 +149,14 @@ export default function DashboardPage() {
                     : undefined,
                 }}
                 onDateSelect={({ from, to }) => {
+                  if (from === undefined || to === undefined) {
+                    setFilter((f) => ({
+                      ...f,
+                      filled_datetime: undefined,
+                    }));
+                    return;
+                  }
+                  console.log(from, to);
                   setFilter((f) => ({
                     ...f,
                     filled_datetime: {
@@ -135,20 +169,13 @@ export default function DashboardPage() {
                 numberOfMonths={2}
                 className="min-w-[250px]"
               />
-              
-              <Input
-                id="file"
-                type="file"
-                onChange={async (e) => {
-                  console.log(e.target.files);
-                  if (e.target.files) {
-                    const file = e.target.files[0];
-                    const data = transformData(await extractData(file));
-                    saveDataRowsToIndexedDB(data);
-                    refreshData();
-                  }
-                }}
-              />
+              <div className="flex items-center space-x-2">
+                <span className="date-part">
+                  {date
+                    ? `Selected date: ${date.toDateString()}`
+                    : "No date selected"}
+                </span>
+              </div>
             </div>
           </div>
           <Tabs defaultValue="dispensing" className="space-y-4">
@@ -163,25 +190,27 @@ export default function DashboardPage() {
             </TabsList>
             <TabsContent value="dispensing" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
                 <FilterComponent setFilter={setFilter} filter={filter} />
-                </Card>
-                <DosesCard
-                  totalDosesOnDate={totalDosesOnDate}
-                  averageDosesPerDay={averageDosesPerDay}
+                <DispenseStatsCard
+                  totalDosesOnDate={stats.totalDosesOnDate}
+                  averageDosesPerDay={stats.averageDosesPerDay}
+                  avgDispenseTimeOnDate={stats.avgDispenseTimeOnDate}
+                  avgDispenseTime={stats.avgDispenseTime}
                 />
-                <DispenseTimeCard
-                  avgDispenseTimeOnDate={avgDispenseTimeOnDate}
-                  avgDispenseTime={avgDispenseTime}
-                />
+                <DosesByProductChart data={data} date={date} filter={filter} />
                 <DispenseAccuracyCard
-                  avgDispenseAccuracyOnDate={avgDispenseAccuracyOnDate}
-                  avgDispenseAccuracy={avgDispenseAccuracy}
+                  avgDispenseAccuracyOnDate={stats.avgDispenseAccuracyOnDate}
+                  avgDispenseAccuracy={stats.avgDispenseAccuracy}
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <AverageDispenseTimesCard data={data} />
-                <DispenseTimesHistogram data={data} />
+                <AverageDispenseTimesCard
+                  data={data}
+                  date={date}
+                  setDate={setDate}
+                  filter={filter}
+                />
+                <DispenseTimesHistogram data={data} date={date} />
               </div>
             </TabsContent>
           </Tabs>

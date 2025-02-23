@@ -1,36 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Label } from "recharts";
 import { DataRow } from "@/lib/data/transform";
+import { formatDate } from "@/lib/utils";
 
 interface DispenseTimesHistogramProps {
   data: DataRow[];
+  date: Date | undefined;
 }
 
-const DispenseTimesHistogram: React.FC<DispenseTimesHistogramProps> = ({ data }) => {
-  const [histogramData, setHistogramData] = useState<{ timeRange: string; count: number }[]>([]);
+const DispenseTimesHistogram: React.FC<DispenseTimesHistogramProps> = ({ data, date }) => {
 
-  useEffect(() => {
-    const bins = Array(20).fill(0);
+  const histogramData = useMemo(() => {
+    if (data.length === 0) {
+      return [];
+    }
     const min = 0;
     const max = 500;
-    // const max = data.reduce((acc, it) => Math.max(acc, it.dispense_time || 0), 0);
-    const binSize = (max - min) / bins.length;
-
-    data.forEach((row) => {
-        if (!row.dispense_time) return;
-        if (row.dispense_time < min || row.dispense_time > max) return;
-      const binIndex = Math.floor((row.dispense_time) / binSize);
-      bins[binIndex] += 1;
-    });
+    const binSize = (max - min) / 20;
+    const filteredData = date ? data.filter((it) => it.filled_date === formatDate(date)) : data;
+    const bins = filteredData.reduce((acc, it) => {
+      if (!it.dispense_time) return acc;
+      const binIndex = Math.floor((it.dispense_time) / binSize);
+      acc[binIndex] += 1;
+      return acc;
+    }, Array(20).fill(0));
 
     const formattedData = bins.map((count, index) => ({
       timeRange: `${(index * binSize).toFixed(0)} - ${((index + 1) * binSize).toFixed(0)}`,
       count,
     }));
 
-    setHistogramData(formattedData);
-  }, [data]);
+    return formattedData;
+  }, [data, date]);
+  
 
   return (
     <Card className="lg:col-span-3 col-span-full">

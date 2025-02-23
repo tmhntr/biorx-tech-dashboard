@@ -40,7 +40,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   };
 
   return (
-    <Card className="lg:col-span-4 col-span-full">
+    <Card className="">
       <CardHeader>
         <CardTitle>Filter dispensing data</CardTitle>
       </CardHeader>

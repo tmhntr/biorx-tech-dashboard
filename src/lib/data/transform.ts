@@ -4,6 +4,7 @@ import { RawDataRow } from "./extract";
 export type Container = "vial" | "1cc" | "3cc" | "5cc" | "10cc";
 export const CONTAINERS = ["vial", "1cc", "3cc", "5cc", "10cc"] as Container[];
 export type DataRow = {
+  RXNumber: number;
   product_name: string;
   tech_name: string;
   activity: number;
@@ -55,11 +56,12 @@ const getQS = (row: RawDataRow): boolean => {
     if (row.notes === undefined) {
         return false;
     }
-  return row.notes.toLowerCase().includes("qs");
+  return row.notes.toLowerCase().includes("qs") || row.notes.toLowerCase().includes("ml");
 };
 
 const transformRow = (row: RawDataRow): DataRow => {
   return {
+    RXNumber: row.RXNumber,
     product_name: row.product_name,
     tech_name: row.tech_name,
     activity: row.activity,
