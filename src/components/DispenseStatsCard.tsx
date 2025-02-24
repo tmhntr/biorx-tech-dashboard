@@ -11,6 +11,7 @@ type DispenseStatsCardProps = {
   averageDosesPerDay: number;
   avgDispenseTimeOnDate: number | null;
   avgDispenseTime: number;
+  isDateFiltered: boolean;
 };
 
 const DispenseStatsCard: React.FC<DispenseStatsCardProps> = ({
@@ -18,11 +19,14 @@ const DispenseStatsCard: React.FC<DispenseStatsCardProps> = ({
   averageDosesPerDay,
   avgDispenseTimeOnDate,
   avgDispenseTime,
+  isDateFiltered,
 }) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Dispense Stats</CardTitle>
+    <Card className="shadow-lg rounded-lg border border-gray-200">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 p-4 rounded-t-lg">
+        <CardTitle className="text-lg font-semibold text-blue-700">
+          Dispense Stats
+        </CardTitle>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -31,29 +35,55 @@ const DispenseStatsCard: React.FC<DispenseStatsCardProps> = ({
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2"
-          className="h-4 w-4 text-muted-foreground"
+          className="h-5 w-5 text-blue-700"
         >
           <rect width="20" height="14" x="2" y="5" rx="2" />
           <path d="M2 10h20" />
         </svg>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">
-          {avgDispenseTimeOnDate ? avgDispenseTimeOnDate.toFixed(0) : 'na'}s
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-3xl font-bold text-gray-800">
+              {avgDispenseTimeOnDate ? avgDispenseTimeOnDate.toFixed(0) : "na"}s
+            </div>
+            <p className="text-sm text-gray-500">Mean Dispense Time</p>
+          </div>
+          {isDateFiltered && (
+            <p className="text-sm text-gray-500">
+              {avgDispenseTimeOnDate
+                ? avgDispenseTimeOnDate > avgDispenseTime
+                  ? "+"
+                  : ""
+                : ""}
+              {avgDispenseTimeOnDate
+                ? (
+                    ((avgDispenseTimeOnDate - avgDispenseTime) * 100) /
+                    avgDispenseTime
+                  ).toFixed(2)
+                : "na"}
+              % from period average
+            </p>
+          )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {avgDispenseTimeOnDate ? (avgDispenseTimeOnDate > avgDispenseTime ? '+' : '') : ''}
-          {avgDispenseTimeOnDate ? ((avgDispenseTimeOnDate - avgDispenseTime) * 100 / avgDispenseTime).toFixed(2) : 'na'}% from period average
-        </p>
-        <div className="text-2xl font-bold mt-4">{totalDosesOnDate}</div>
-        <p className="text-xs text-muted-foreground">
-          {((totalDosesOnDate * 100) / averageDosesPerDay - 100) > 0 && '+'}
-          {((totalDosesOnDate * 100) / averageDosesPerDay - 100).toFixed(2)}%
-          daily average
-        </p>
+        <div className="flex items-center justify-between mt-4">
+          <div>
+            <div className="text-3xl font-bold text-gray-800">
+              {totalDosesOnDate}
+            </div>
+            <p className="text-sm text-gray-500"># Doses</p>
+          </div>
+          {isDateFiltered && (
+            <p className="text-sm text-gray-500">
+              {(totalDosesOnDate * 100) / averageDosesPerDay - 100 > 0 && "+"}
+              {((totalDosesOnDate * 100) / averageDosesPerDay - 100).toFixed(2)}
+              % daily average
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 };
 
-export default DispenseStatsCard; 
+export default DispenseStatsCard;

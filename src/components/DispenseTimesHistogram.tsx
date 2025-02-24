@@ -36,9 +36,11 @@ const DispenseTimesHistogram: React.FC<DispenseTimesHistogramProps> = ({ data, d
   
 
   return (
-    <Card className="lg:col-span-3 col-span-full">
-      <CardHeader>
-        <CardTitle>Doses by dispense time</CardTitle>
+    <Card className="shadow-lg rounded-lg border border-gray-200 lg:col-span-3 col-span-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 p-4 rounded-t-lg">
+        <CardTitle className="text-lg font-semibold text-blue-700">
+          Doses by dispense time
+        </CardTitle>
       </CardHeader>
       <CardContent className="pl-2 mx-auto w-fit">
         <BarChart margin={{

@@ -25,7 +25,7 @@ export const window_length: Window = "3 months";
 export default function DashboardPage() {
   const [isDBReady, setIsDBReady] = React.useState<boolean>(false);
   const [filter, setFilter] = React.useState<DataFilters>({});
-  const [date, setDate] = React.useState<Date>(new Date());
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
 
   const handleInitDB = async () => {
     if (isDBReady) return;
@@ -38,8 +38,8 @@ export default function DashboardPage() {
   React.useEffect(() => {
     // if current date is not in the data, set the date to the last filled date
     if (data.length === 0) return;
-    if (!data.some((row) => row.filled_date === formatDate(date))) {
-      setDate(new Date(data[data.length - 1].filled_date));
+    if (date && !data.some((row) => row.filled_date === formatDate(date))) {
+      setDate(undefined);
     }
   }, [data]);
 
@@ -57,21 +57,23 @@ export default function DashboardPage() {
     refreshData();
   }, [filter, isDBReady]);
 
-  const dataOnDate = React.useMemo(() => {
+  const dateFilteredData = React.useMemo(() => {
+    if (!date) return data;
     return data.filter((row) => row.filled_date === formatDate(date));
   }, [data, date]);
 
   const stats = React.useMemo(() => {
+    console.log(data)
     return {
-      totalDosesOnDate: dataOnDate.length,
+      totalDosesOnDate: dateFilteredData.length,
       avgDispenseTimeOnDate:
-        dataOnDate.reduce((acc, row) => acc + (row.dispense_time || 0), 0) /
-        dataOnDate.length,
+        dateFilteredData.reduce((acc, row) => acc + (row.dispense_time || 0), 0) /
+        dateFilteredData.length,
       averageDosesPerDay:
         data.length / new Set(data.map((row) => row.filled_date)).size,
       avgDispenseAccuracyOnDate:
-        dataOnDate.reduce((acc, row) => acc + (row.activity_error || 0), 0) /
-        dataOnDate.length,
+        dateFilteredData.reduce((acc, row) => acc + (row.activity_error || 0), 0) /
+        dateFilteredData.length,
       avgDispenseAccuracy:
         data.reduce((acc, row) => acc + (row.activity_error || 0), 0) /
         data.length,
@@ -79,7 +81,7 @@ export default function DashboardPage() {
         data.reduce((acc, row) => acc + (row.dispense_time || 0), 0) /
         data.length,
     };
-  }, [dataOnDate]);
+  }, [dateFilteredData]);
 
   return (
     <>
@@ -166,13 +168,6 @@ export default function DashboardPage() {
                 numberOfMonths={2}
                 className="min-w-[250px]"
               />
-              <div className="flex items-center space-x-2">
-                <span className="date-part">
-                  {date
-                    ? `Selected date: ${date.toDateString()}`
-                    : "No date selected"}
-                </span>
-              </div>
             </div>
           </div>
           <Tabs defaultValue="dispensing" className="space-y-4">
@@ -187,12 +182,13 @@ export default function DashboardPage() {
             </TabsList>
             <TabsContent value="dispensing" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <FilterComponent setFilter={setFilter} filter={filter} />
+                <FilterComponent setFilter={setFilter} filter={filter} date={date} setDate={setDate} />
                 <DispenseStatsCard
                   totalDosesOnDate={stats.totalDosesOnDate}
                   averageDosesPerDay={stats.averageDosesPerDay}
                   avgDispenseTimeOnDate={stats.avgDispenseTimeOnDate}
                   avgDispenseTime={stats.avgDispenseTime}
+                  isDateFiltered={!!date}
                 />
                 <DosesByProductChart data={data} date={date} filter={filter} />
                 <DispenseAccuracyCard

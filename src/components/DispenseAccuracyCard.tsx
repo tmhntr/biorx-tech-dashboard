@@ -16,9 +16,11 @@ const DispenseAccuracyCard: React.FC<DispenseAccuracyCardProps> = ({
   avgDispenseAccuracy,
 }) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Dispensing accuracy</CardTitle>
+    <Card className="shadow-lg rounded-lg border border-gray-200">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 p-4 rounded-t-lg">
+        <CardTitle className="text-lg font-semibold text-blue-700">
+          Dispensing accuracy
+        </CardTitle>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -32,9 +34,11 @@ const DispenseAccuracyCard: React.FC<DispenseAccuracyCardProps> = ({
           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{avgDispenseAccuracyOnDate ? avgDispenseAccuracyOnDate.toFixed(2) : 'na'}% avg error</div>
-        <p className="text-xs text-muted-foreground">
+      <CardContent className="p-4">
+        <div className="text-2xl font-bold text-gray-800">
+          {avgDispenseAccuracyOnDate ? avgDispenseAccuracyOnDate.toFixed(2) : 'na'}% avg error
+        </div>
+        <p className="text-xs text-gray-500">
           {avgDispenseAccuracyOnDate ? (avgDispenseAccuracyOnDate > avgDispenseAccuracy ? '+' : '') : ''}
           {avgDispenseAccuracyOnDate ? ((avgDispenseAccuracyOnDate - avgDispenseAccuracy) * 100 / avgDispenseAccuracy).toFixed(2) : 'na'}% from period average
         </p>
