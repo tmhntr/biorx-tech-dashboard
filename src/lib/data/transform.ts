@@ -39,7 +39,7 @@ const getRowDatetime = (row: RawDataRow): string => {
 const getContainer = (row: RawDataRow): Container => {
   const final_volume = row.final_volume;
   const procedure = row.procedure;
-  if (procedure.includes("vial")) return "vial";
+  if (procedure.startsWith("Vial")) return "vial";
   else if (final_volume < 0.39) return "1cc";
   else if (final_volume < 1.49) return "3cc";
   else if (final_volume < 2.5) return "5cc";

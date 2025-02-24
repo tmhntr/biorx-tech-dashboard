@@ -14,8 +14,8 @@ import { DataFilters } from "@/lib/db";
 
 interface AverageDispenseTimesCardProps {
   data: DataRow[];
-  date: Date;
-  setDate: (date: Date) => void;
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
   filter: DataFilters,
 }
 
@@ -27,21 +27,26 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
 }) => {
 
   const averageDispenseTimes = useMemo(() => {
+    const filteredData = data.filter((row) => {
+      // the data should have a dispense_time
+      return row.dispense_time !== null;
+    });
+    // console.log(filteredData);
     if (filter.product && filter.product.length > 0) {
-      const groupedByProduct = Object.groupBy(data, (it) => it.product_name);
+      const groupedByProduct = Object.groupBy(filteredData, (it) => it.product_name);
       return Object.entries(groupedByProduct).flatMap(([product, rows]) => {
         const groupedByDate = rows ? Object.groupBy(rows, (it) => it.filled_date) : {};
         return Object.entries(groupedByDate).map(([date, rows]) => ({
           product,
           date,
-          avg_dispense_time: rows ? rows.reduce((acc, row) => acc + (row.dispense_time || 0), 0) / rows.length : null,
+          avg_dispense_time: rows && rows.length > 0 ? rows.reduce((acc, row) => acc + (row.dispense_time || 0), 0) / rows.length : null,
         }));
       });
     } else {
-      const groupedByDate = Object.groupBy(data, (it) => it.filled_date);
+      const groupedByDate = Object.groupBy(filteredData, (it) => it.filled_date);
       return Object.entries(groupedByDate).map(([date, rows]) => ({
         date,
-        avg_dispense_time: rows ? rows.reduce((acc, row) => acc + (row.dispense_time || 0), 0) / rows.length : null,
+        avg_dispense_time: rows && rows.length > 0 ? rows.reduce((acc, row) => acc + (row.dispense_time || 0), 0) / rows.length : null,
       }));
     }
   }, [data, date, filter]);
@@ -97,14 +102,16 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
   // }, [data, date, setDate]);
 
   return (
-    <Card className="lg:col-span-4 col-span-full">
-      <CardHeader>
-        <CardTitle>Dispense times by date</CardTitle>
+    <Card className="shadow-lg rounded-lg border border-gray-200 lg:col-span-4 col-span-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50 p-4 rounded-t-lg">
+        <CardTitle className="text-lg font-semibold text-blue-700">
+          Dispense times by date
+        </CardTitle>
       </CardHeader>
       <CardContent className="pl-2 mx-auto w-fit">
         <LineChart
           margin={{
-            top: 10,
+            top: 40,
             right: 0,
             left: 0,
             bottom: 20,
@@ -119,25 +126,25 @@ const AverageDispenseTimesCard: React.FC<AverageDispenseTimesCardProps> = ({
             setDate(new Date(e.activeLabel));
           }}
         >
-          <Line type="monotone" dataKey="avg_dispense_time" stroke="#8884d8" />
+          <Line type="monotone" dataKey="avg_dispense_time"  stroke="#8884d8" />
           <CartesianGrid stroke="#ccc" />
           <XAxis dataKey="date" includeHidden>
             <Label
               value="Date"
               offset={-5}
               position="insideBottom"
-              style={{ textAnchor: "middle" }}
+              style={{ textAnchor: "middle", fontSize: 14, fill: "#333" }}
             />
           </XAxis>
-          <YAxis>
+          <YAxis tickFormatter={(value) => Number(value).toFixed(0)}>
             <Label
-              value="Mean dispense time (s)"
+              value="Mean Dispense Time (seconds)"
               angle={-90}
               position="insideLeft"
-              style={{ textAnchor: "middle" }}
+              style={{ textAnchor: "middle", fontSize: 14, fill: "#333" }}
             />
           </YAxis>
-          <Tooltip />
+          <Tooltip formatter={(value) => [Number(value).toFixed(0), "Mean Time (s)"]} labelFormatter={(label) => `Date: ${label}`}   />
         </LineChart>
       </CardContent>
     </Card>
